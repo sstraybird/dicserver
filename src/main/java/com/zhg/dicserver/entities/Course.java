@@ -1,22 +1,26 @@
 package com.zhg.dicserver.entities;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.*;
 
 @Entity
+@Table(name="course")
 public class Course {
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Integer id;
 
-	
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+	@GenericGenerator(name = "native", strategy = "native")
+	private Long id;
+
+	@Column(name = "name")
 	private String name;
 	
     @OneToMany(
@@ -25,28 +29,39 @@ public class Course {
             orphanRemoval = true
     )
 	private List<Lecture> lectures = new ArrayList<>();
-	public Integer getId() {
-		return id;
-	}
 
-	public void setId(Integer id) {
+	@ManyToMany(mappedBy = "courses")
+	private Set<Word> words = new HashSet<>();
+
+	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	public void setLectures(List<Lecture> lectures) {
+		this.lectures = lectures;
+	}
+
 	public List<Lecture> getLectures() {
 		return lectures;
 	}
 
-	public void setLectures(List<Lecture> lectures) {
-		this.lectures = lectures;
+	public Long getId() {
+		return id;
 	}
-	
+
+	public String getName() {
+		return name;
+	}
+
+	public Set<Word> getWords() {
+		return words;
+	}
+
+	public void setWords(Set<Word> words) {
+		this.words = words;
+	}
 }

@@ -3,6 +3,7 @@ package com.zhg.dicserver.controllers;
 import com.zhg.dicserver.DTO.LectureReqDTO;
 import com.zhg.dicserver.DTO.LectureResDTO;
 import com.zhg.dicserver.DTO.WordReqDTO;
+import com.zhg.dicserver.DTO.WordResDTO;
 import com.zhg.dicserver.entities.Course;
 import com.zhg.dicserver.entities.Lecture;
 import com.zhg.dicserver.entities.User;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Controller
 @RequestMapping(path="/word")
@@ -36,31 +38,73 @@ public class WordController {
 	private UserRepository userRepository ;
 	@PostMapping(path = "/add") 
 	public @ResponseBody String addLecture(@RequestBody WordReqDTO wordReqDTO) {
-		Optional<Lecture> optionalLecture = lectureRepository.findById(wordReqDTO.getLectureId());
-		Lecture lecture = optionalLecture.get();
+
+		Lecture lecture = lectureRepository.findById(wordReqDTO.getLectureId()).get();
+		Course course = courseRepository.findById(wordReqDTO.getCourseId()).get();
 		Word word = new Word();
 		word.setName(wordReqDTO.getName());
+		word.setDefinition(wordReqDTO.getDefinition());
 		word.setLecture(lecture);
-		Optional<User> optionalUser = userRepository.findById(21);
+		word.setUser(userRepository.findById(wordReqDTO.getUserId()).get());
+		word.getCourses().add(course);
 
-		word.setUser(optionalUser.get());
 		wordRepository.save(word) ;
 		return "Saved";
 	}
 
-	@GetMapping("/list")
-	public @ResponseBody List<LectureResDTO> getLecturesByCourseId(@RequestParam(name="courseId")Integer courseId){
-		Optional<Course> courseOptional = courseRepository.findById(courseId);
-		Course course = courseOptional.get();
-		List<Lecture> lectures = course.getLectures();
-		List<LectureResDTO> lectureResDTOS = new ArrayList<>();
-		for (Lecture lecture:lectures) {
-			LectureResDTO lectureResDTO = new LectureResDTO();
-			lectureResDTO.setId(lecture.getId());
-			lectureResDTO.setNo(lecture.getNo());
-			lectureResDTO.setName(lecture.getName());
-			lectureResDTOS.add(lectureResDTO);
+	@GetMapping("/all")
+	public @ResponseBody List<WordResDTO> getWords(@RequestParam(name="id")String id,@RequestParam(name="parent")String parent){
+        System.out.println(id);
+        List<WordResDTO> wordResDTOS = new ArrayList<>();
+        Iterable<Word> all = wordRepository.findAll();
+        if("#".equals(id)){
+            for (Word word:all) {
+                WordResDTO wordResDTO = new WordResDTO();
+                wordResDTO.setId(word.getId().toString()+"_#");
+                wordResDTO.setParent(id);
+                wordResDTO.setText(word.getName());
+                wordResDTO.setChildren(true);
+                wordResDTOS.add(wordResDTO);
+            }
+        }else if("".equals(parent)){
+			System.out.println(id);
+			Long findId = Long.parseLong(id.split("_")[0]);
+			Word word =  wordRepository.findById(findId).get();
+			String definition = word.getDefinition();
+			WordResDTO d = new WordResDTO();
+			d.setId(definition);
+			d.setParent(id);
+			d.setText("definition");
+			d.setChildren(false);
+			wordResDTOS.add(d);
+			Set<Course> courses = word.getCourses();
+			for (Course course:courses) {
+				WordResDTO wordResDTO = new WordResDTO();
+				wordResDTO.setId(course.getId().toString()+"_course");
+				wordResDTO.setParent(id);
+				wordResDTO.setText(course.getName());
+				wordResDTO.setChildren(true);
+				wordResDTOS.add(wordResDTO);
+			}
+
+        }else {
+			System.out.println(id);
+			Long findId = Long.parseLong(id.split("_")[0]);
+			Optional<Course> optionalCourse = courseRepository.findById(findId);
+			Course course = optionalCourse.get();
+			List<Lecture> lectures = course.getLectures();
+			for (Lecture lecture: lectures) {
+				WordResDTO wordResDTO = new WordResDTO();
+				wordResDTO.setId(lecture.getId().toString()+"_lecture");
+				wordResDTO.setParent(parent+"course");
+				wordResDTO.setText("lecture "+lecture.getNo() + ":" + lecture.getName());
+				wordResDTO.setChildren(false);
+				wordResDTOS.add(wordResDTO);
+			}
+
 		}
-		return lectureResDTOS;
+
+
+		return wordResDTOS;
 	}
 }

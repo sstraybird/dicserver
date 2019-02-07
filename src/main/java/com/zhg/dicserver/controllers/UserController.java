@@ -1,41 +1,46 @@
 package com.zhg.dicserver.controllers;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import com.zhg.dicserver.DTO.LectureReqDTO;
 import com.zhg.dicserver.DTO.LectureResDTO;
+import com.zhg.dicserver.DTO.UserReqDTO;
+import com.zhg.dicserver.DTO.WordReqDTO;
+import com.zhg.dicserver.entities.Course;
 import com.zhg.dicserver.entities.Lecture;
+import com.zhg.dicserver.entities.User;
+import com.zhg.dicserver.entities.Word;
+import com.zhg.dicserver.repository.CourseRepository;
+import com.zhg.dicserver.repository.LectureRepository;
+import com.zhg.dicserver.repository.UserRepository;
+import com.zhg.dicserver.repository.WordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import com.zhg.dicserver.entities.Course;
-import com.zhg.dicserver.repository.CourseRepository;
-import com.zhg.dicserver.repository.LectureRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Controller
-@RequestMapping(path="/lecture")
+@RequestMapping(path="/user")
 @CrossOrigin
-public class LectureController {
+public class UserController {
 	@Autowired
 	private LectureRepository lectureRepository;
 	
 	@Autowired
 	private CourseRepository courseRepository ;
 
-	@PostMapping(path = "/add") 
-	public @ResponseBody String addLecture(@RequestBody LectureReqDTO lectureDTO) {
-		Optional<Course> courseOptional = courseRepository.findById(lectureDTO.getCourseId());
-		Course course = courseOptional.get();
-		course.setId(lectureDTO.getCourseId());
-		Lecture lecture = new Lecture();
-		lecture.setName(lectureDTO.getName());
-		lecture.setNo(lectureDTO.getNo());
+	@Autowired
+	private WordRepository wordRepository;
 
-		lecture.setCourse(course);
-		lectureRepository.save(lecture) ;
+	@Autowired
+	private UserRepository userRepository ;
+	@PostMapping(path = "/add") 
+	public @ResponseBody String addLecture(@RequestBody UserReqDTO userReqDTO) {
+		User user = new User();
+		user.setName(userReqDTO.getName());
+		user.setPassword(userReqDTO.getPassword());
+		user.setEmail(userReqDTO.getEmail());
+		userRepository.save(user) ;
 		return "Saved";
 	}
 
